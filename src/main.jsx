@@ -3,38 +3,39 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './index.css';
 import App from './App.jsx';
-// here i use lazy loading for optimization purpose it will load component when requires 
+
+// Lazy-loaded components
 const Cart = lazy(() => import('./components/Cart.jsx'));
 const ErrorPage = lazy(() => import('./components/ErrorPage.jsx'));
-const ProductList = lazy(() => import('./components/ProductList.jsx'))
-const ProductDetail = lazy(() => import('./components/ProductDetail.jsx'))
-// here i implementing react router 
+const ProductList = lazy(() => import('./components/ProductList.jsx'));
+const ProductDetail = lazy(() => import('./components/ProductDetail.jsx'));
+const Login = lazy(() => import('./components/Login.jsx'));
+const SignUp = lazy(() => import('./components/SignUp.jsx'));
+const ProtectedRoute = lazy(() => import('./components/ProtectRoute.jsx'));
+
+// Router configuration with protected /cart route
 const appRouter = createBrowserRouter([
   {
     path: '/',
     element: <App />,
     children: [
+      { path: '/', element: <ProductList /> },
       {
-        path: '/',
-        element: <ProductList />
+        path: '/cart',
+        element: (
+          <ProtectedRoute>
+            <Cart />
+          </ProtectedRoute>
+        )
       },
-      {
-        path: '/cart', element: <Cart />
-
-      },
-      {
-        // here :id use for dynamic routing if product id is 1 then it will navigate to product whose id 1 
-        path: '/productDetail/:id',
-        element: <ProductDetail />
-
-      },
-
+      { path: '/productDetail/:id', element: <ProductDetail /> },
+      { path: '/login', element: <Login /> },
+      { path: '/signup', element: <SignUp /> }
     ],
-    //  i use search the page that does not exist so an error page will show to user 
     errorElement: <ErrorPage />
   }
 ]);
-// this loader use for suspense 
+
 const Loader = () => (
   <div className="flex items-center justify-center min-h-screen">
     <div role="status">
@@ -60,7 +61,6 @@ const Loader = () => (
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    {/* we use suspense here because we don't need to wrap every component , which increases code redundancy  */}
     <Suspense fallback={<Loader />}>
       <RouterProvider router={appRouter} />
     </Suspense>

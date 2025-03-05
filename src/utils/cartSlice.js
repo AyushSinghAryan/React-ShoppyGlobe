@@ -4,36 +4,31 @@ const cartSlice = createSlice({
     name: 'cart',
     initialState: [],
     reducers: {
-        // addToCart use for adding item in the cart , if item exist in the cart then increase quantity by 1 else add item with quantity 1 
         addToCart: (state, action) => {
-            const existingItem = state.find(item => item.id === action.payload.id);
+            // Find item by checking the nested productId._id
+            const existingItem = state.find(item => item.productId._id === action.payload.productId._id);
             if (existingItem) {
-                existingItem.quantity += 1;
+                // Increase quantity by provided quantity or by 1 if not provided
+                existingItem.quantity += action.payload.quantity || 1;
             } else {
-                state.push({ ...action.payload, quantity: 1 });
+                state.push(action.payload);
             }
         },
-        // removeFromCart remove the item based on id match
-        removeFromCart: (state, action) => {
-            return state.filter(item => item.id !== action.payload);
-        },
-        // increaseQuantity will increase item quantity by 1 , if item exist 
+        removeFromCart: (state, action) =>
+            state.filter(item => item.productId._id !== action.payload),
         increaseQuantity: (state, action) => {
-            const item = state.find(item => item.id === action.payload);
-            if (item) {
-                item.quantity += 1;
-            }
+            const item = state.find(item => item.productId._id === action.payload);
+            if (item) item.quantity += 1;
         },
-        // decreaseQuantity will decrease item quantity by 1 , if item exist
-
         decreaseQuantity: (state, action) => {
-            const item = state.find(item => item.id === action.payload);
-            if (item && item.quantity > 1) {
-                item.quantity -= 1;
-            }
-        }
+            const item = state.find(item => item.productId._id === action.payload);
+            if (item && item.quantity > 1) item.quantity -= 1;
+        },
+        setCart: (state, action) => action.payload, // to set the entire cart from backend
+        clearCart: () => []  // New action to clear the cart
+
     }
 });
 
-export const { addToCart, removeFromCart, increaseQuantity, decreaseQuantity } = cartSlice.actions;
+export const { addToCart, removeFromCart, increaseQuantity, decreaseQuantity, setCart, clearCart } = cartSlice.actions;
 export default cartSlice.reducer;

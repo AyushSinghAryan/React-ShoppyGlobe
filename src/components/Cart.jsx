@@ -1,35 +1,61 @@
-import React from 'react'
-import { useSelector, } from 'react-redux';
+import React, { useEffect, useMemo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { useMemo } from 'react';
+import axios from 'axios';
 import CartItem from './CartItem';
+import { setCart } from '../utils/cartSlice';
 import { Bounce, toast } from "react-toastify";
 
-
 function Cart() {
-    //  we get inital state of cart using useSelector , initally cart is empty 
+    const dispatch = useDispatch();
+    const token = useSelector(state => state.auth.token);
     const cart = useSelector(state => state.cart);
-    // here we are using use memo for total price calculation , for optimazation 
+
+    // Fetch the cart from the backend when the component mounts (if logged in)
+    useEffect(() => {
+        const fetchCart = async () => {
+            try {
+                const response = await axios.get("http://localhost:3000/api/cart", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                // Assuming your backend returns the cart as: { cart: { products: [...] } }
+                if (response.data.cart && response.data.cart.products) {
+                    dispatch(setCart(response.data.cart.products));
+                }
+            } catch (error) {
+                console.error("Error fetching cart:", error);
+                toast.error("Failed to fetch cart from server");
+            }
+        };
+
+        if (token) {
+            fetchCart();
+        }
+    }, [token, dispatch]);
+
+    // Calculate total price using useMemo for performance
     const totalPrice = useMemo(() =>
-        cart.reduce((total, item) => total + item.price * item.quantity, 0),
+        cart.reduce((total, item) => total + item.productId.price * item.quantity, 0),
         [cart]
     );
-    // if cart is empty then we  use button to return user homepage 
+
+    // If cart is empty, show a message and button to browse products
     if (cart.length === 0) {
         return (
-            <div className="p-6 bg-gradient-to-r from-grey-200 to-blue-100 min-h-screen flex items-center justify-center">
-                <p className="text-xl font-semibold text-gray-600">
+            <div className="p-6 bg-gradient-to-r from-gray-200 to-blue-100 min-h-screen flex flex-col md:flex-row items-center justify-center gap-4">
+                <p className="text-xl font-semibold text-gray-600 text-center">
                     Your cart is empty! Add some products to get started.
                 </p>
-                <Link to="/">   <button
-                    className="ml-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-
-                >
-                    Browse Products
-                </button></Link>
+                <Link to="/">
+                    <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                        Browse Products
+                    </button>
+                </Link>
             </div>
         );
     }
+
+
     return (
         <section className="py-10 relative">
             <div className="w-full max-w-7xl px-4 md:px-5 lg-6 mx-auto">
@@ -44,7 +70,6 @@ function Cart() {
                     <h6 className="font-bold text-3xl text-indigo-600">${totalPrice.toFixed(2)}</h6>
                 </div>
                 <button onClick={() => {
-                    // this checkout button we notify user to checkout 
                     toast.info(`Coming soon... :)`, {
                         position: "top-right",
                         autoClose: 1000,
@@ -56,10 +81,12 @@ function Cart() {
                         theme: "light",
                         transition: Bounce,
                     });
-                }} className="mt-6 w-full py-4 bg-indigo-600 text-white font-semibold text-lg rounded-full hover:bg-indigo-700">Checkout</button>
+                }} className="mt-6 w-full py-4 bg-indigo-600 text-white font-semibold text-lg rounded-full hover:bg-indigo-700">
+                    Checkout
+                </button>
             </div>
         </section>
     );
 }
 
-export default Cart
+export default Cart;

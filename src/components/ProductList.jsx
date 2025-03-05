@@ -4,23 +4,23 @@ import ProductItem from "./ProductItem";
 
 function ProductList() {
     // useFetchProductList is custom hook which will the data , error and loading
-    const { data, error, loading } = useFetchProductList("https://dummyjson.com/products");
+    const { data, error, loading } = useFetchProductList("http://localhost:3000/api/products/");
     // setFilteredProduct in this we put the filtered and all product come from data
     const [filteredProduct, setFilteredProduct] = useState([]);
     // setSearchTerm use for searching the item , taking text input 
     const [searchTerm, setSearchTerm] = useState("");
-
+    console.log("product data", data);
     useEffect(() => {
         // useEffect run only when data dependency changes
         if (data) {
-            setFilteredProduct(data.products);
+            setFilteredProduct(data);
         }
     }, [data]);
 
     const handleSearch = () => {
         if (!data) return;
-        const filtered = data.products.filter(product =>
-            product.title.toLowerCase().includes(searchTerm.toLowerCase())
+        const filtered = data.filter(product =>
+            product.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
         setFilteredProduct(filtered);
     };
